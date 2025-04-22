@@ -20,12 +20,18 @@ renderList();
 // 완료 토글, 삭제 처리
 list.addEventListener("click", (e) => {
   const index = e.target.dataset.index;
+  const tag = e.target.tagName;
   if (e.target.classList.contains("delete-btn")) {
     todos.splice(index, 1);
-  } else if (e.target.tagName === "LI") {
+  } else if (
+    e.target.closest("li") &&
+    tag !== "SELECT" &&
+    tag !== "OPTION" &&
+    tag !== "BUTTON"
+  ) {
     todos[index].done = !todos[index].done;
+    saveAndRender();
   }
-  saveAndRender();
 });
 
 // 저장 + 렌더링 함수
@@ -39,18 +45,13 @@ function renderCalendar() {
   const calendarEl = document.getElementById("calendar");
   if (!calendarEl) return;
 
-  // 기존 캘린더가 있으면 제거
-  calendarEl.innerHTML = "";
+  calendarEl.innerHTML = ""; // 기존 제거
 
-  const calendar = new FullCalendar.Calendar(calendarEl, {
+  calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "ko",
     height: 600,
-    events: todos.map((todo) => ({
-      title: `[${todo.category}] ${todo.text}`,
-      start: todo.date,
-      allDay: true,
-    })),
+    events: getAllEvents(),
   });
 
   calendar.render();
@@ -58,12 +59,9 @@ function renderCalendar() {
 
 // 목록 렌더링 함수
 function renderList() {
-  // 날짜 기준 정렬
   todos.sort((a, b) => new Date(a.date) - new Date(b.date));
-
   list.innerHTML = "";
 
-  // ✅ 날짜 필터링 (선택된 날짜가 있으면 해당 날짜만)
   const filtered = selectedDateFilter
     ? todos.filter((todo) => todo.date === selectedDateFilter)
     : todos;
@@ -73,18 +71,60 @@ function renderList() {
     li.dataset.index = i;
     if (todo.done) li.classList.add("done");
 
-    li.innerHTML = `
-        <div>
-          <strong>[${todo.category}]</strong> ${todo.text}
-          <br /><small>${todo.date}</small>
-        </div>
+    // ✅ 카테고리 select 박스
+    const categorySelect = document.createElement("select");
+    ["공부", "운동", "일", "개인", "기타"].forEach((option) => {
+      const opt = document.createElement("option");
+      opt.value = option;
+      opt.text = option;
+      if (option === todo.category) opt.selected = true;
+      categorySelect.appendChild(opt);
+    });
+
+    // ✅ 카테고리 색상 클래스 동적 적용
+    categorySelect.classList.remove(
+      "option-공부",
+      "option-운동",
+      "option-일",
+      "option-개인",
+      "option-기타"
+    );
+    categorySelect.classList.add(`option-${todo.category}`);
+
+    // ✅ 카테고리 변경 시 저장 + 캘린더 리렌더
+    categorySelect.addEventListener("change", (e) => {
+      const newCategory = e.target.value;
+      todos[i].category = newCategory;
+
+      // ✅ 바뀐 카테고리 색상 반영
+      categorySelect.classList.remove(
+        "option-공부",
+        "option-운동",
+        "option-일",
+        "option-개인",
+        "option-기타"
+      );
+      categorySelect.classList.add(`option-${newCategory}`);
+
+      localStorage.setItem("todos", JSON.stringify(todos));
+      renderCalendar();
+    });
+
+    // ✅ 할 일 텍스트 + 날짜
+    const contentDiv = document.createElement("div");
+    contentDiv.innerHTML = `
+        ${todo.text}
+        <br><small>${todo.date}</small>
       `;
 
+    // ✅ 삭제 버튼
     const delBtn = document.createElement("button");
     delBtn.textContent = "🗑";
     delBtn.classList.add("delete-btn");
     delBtn.dataset.index = i;
 
+    li.appendChild(categorySelect);
+    li.appendChild(contentDiv);
     li.appendChild(delBtn);
     list.appendChild(li);
   });
@@ -156,13 +196,13 @@ flatpickr("#datepicker", {
     if (calendar) {
       calendar.gotoDate(selectedDate);
 
-      // ✅ 기존 fake 및 모든 이벤트 제거
+      // 기존 fake 및 모든 이벤트 제거
       calendar.removeAllEvents();
 
-      // ✅ todos로부터 다시 추가
+      // todos로부터 다시 추가
       getAllEvents().forEach((event) => calendar.addEvent(event));
 
-      // ✅ 선택한 날짜 하이라이트
+      // 선택한 날짜 하이라이트
       const highlightColor = document.body.classList.contains("light-mode")
         ? "#cfd8dc"
         : "#ffeb3b";
@@ -202,15 +242,4 @@ themeToggle.addEventListener("click", () => {
 document.getElementById("show-all").addEventListener("click", () => {
   selectedDateFilter = null;
   renderList();
-});
-
-calendar.addEvent({
-  title: "",
-  start: dateStr,
-  allDay: true,
-  display: "background",
-  backgroundColor: highlightColor,
-  extendedProps: {
-    fake: true,
-  },
 });
