@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="todo_css.css" />
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet" />
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+</head>
+
+<body>
+    <button id="theme-toggle">🌙 다크모드</button>
+    <div class="wrapper">
+        <!-- 기존 내용 전부 이 안에 넣어줘 -->
+        <div class="container">
+            <!-- To-Do 입력창 + 목록 -->
+            <h1>📝 To-Do List</h1>
+            <div class="input-meta">
+                <input type="text" id="datepicker" placeholder="날짜를 선택하세요" />
+                <select id="todo-category">
+                    <option value="기타">카테고리</option>
+                    <option value="공부">공부</option>
+                    <option value="운동">운동</option>
+                    <option value="일">일</option>
+                    <option value="개인">개인</option>
+                </select>
+                <button id="show-all">📋 전체 보기</button>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="todo-input" placeholder="할 일을 입력하세요" />
+                <button id="add-btn">추가</button>
+            </div>
+            <ul id="todo-list"></ul>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
